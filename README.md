@@ -34,14 +34,26 @@ Open http://localhost:3000. `PORT=3001 npm run dev` picks another port.
 
 ## Deploy to Vercel
 
-The repo lives on self-hosted Gitea, which Vercel's Git integration does not support,
-so deploy with the Vercel CLI:
+The app runs as the Vercel project `it-is-written` in the Waters Church team, at
+https://it-is-written-waters-church.vercel.app. The repo lives on self-hosted Gitea, which Vercel's
+Git integration does not support, so every deploy is done from a local checkout with
+the Vercel CLI (`npx vercel`, signed in to the team):
 
-1. `npx vercel` — creates and links the Vercel project (accept the defaults; there is
-   no build step).
-2. In the Vercel project settings, add `ANTHROPIC_API_KEY` as an environment variable
-   for Production and Preview.
-3. `npx vercel --prod` — deploys to production.
+```sh
+npx vercel link --yes --project it-is-written --scope waters-church   # once per checkout
+npx vercel deploy --scope waters-church          # preview deployment (login-protected)
+npx vercel deploy --prod --scope waters-church   # production
+```
+
+`ANTHROPIC_API_KEY` is already set in the project as a sensitive environment variable
+for Production and Preview. To rotate it:
+
+```sh
+npx vercel env rm ANTHROPIC_API_KEY production --scope waters-church
+npx vercel env add ANTHROPIC_API_KEY production --sensitive --scope waters-church < key.txt
+```
+
+(same for `preview`), then redeploy.
 
 ## Secrets
 
@@ -60,15 +72,16 @@ layers:
 2. **A single-purpose proxy.** The proxy only builds its three fixed prompts, caps input
    and output size, and its system prompt tells the model to return an empty result for
    abusive or off-topic input (the UI shows "No verses found" in that case).
-3. **Rate limit per IP.** Rate limit `/api/claude` per IP in the Vercel Firewall, either
-   from the CLI or in the project's Firewall tab:
+3. **Rate limit per IP.** A Vercel Firewall rule named "Rate limit claude proxy" is
+   published on the project: `/api/claude` is limited to 60 requests per minute per IP,
+   then denied for the rest of that minute. One person cannot reach that, but a crowd
+   on one shared Wi-Fi network (one public IP) could, so raise it if that happens. It
+   was created with:
 
    ```sh
    npx vercel firewall rules add "Rate limit claude proxy" \
      --condition '{"type":"path","op":"eq","value":"/api/claude"}' \
-     --action rate_limit --rate-limit-window 60 --rate-limit-requests 20 \
-     --rate-limit-keys ip --rate-limit-action deny --yes
+     --action rate_limit --rate-limit-window 60 --rate-limit-requests 60 \
+     --rate-limit-keys ip --rate-limit-action deny --scope waters-church --yes
+   npx vercel firewall publish --scope waters-church --yes
    ```
-
-   Rate-limit rules may not be included on every Vercel plan. If they are not available
-   on this one, the proxy can get an in-function limiter instead.
