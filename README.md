@@ -25,6 +25,17 @@ with optional voice input.
   PWA / native roadmap.
 - `.env.example` — the environment variable the app needs (`ANTHROPIC_API_KEY`).
 
+## Behaviour notes
+
+- The theme follows the device setting on first visit and remembers a manual choice
+  (`localStorage` key `iiw-theme`). The `theme-color` meta tag follows the theme.
+- A search is reflected in the URL as `?q=topic`, so a results page can be shared,
+  refreshed, and navigated with Back and Forward.
+- Screen-reader support: a live status region announces searches, results, prayers,
+  memorize rounds and errors; cards are articles labelled by their reference; the card
+  buttons expose expanded state; a skip link appears on keyboard focus.
+- Voice input in Memorize is disabled (the Speak button is gated off in `index.html`).
+
 ## Run locally
 
 ```sh

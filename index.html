@@ -3,11 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" id="themeColor" content="#0d1117">
 <title>It Is Written</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2036%2036'%20fill='none'%3E%3Cline%20x1='18'%20y1='2'%20x2='18'%20y2='28'%20stroke='%234a90d9'%20stroke-width='2'%20stroke-linecap='round'/%3E%3Cline%20x1='11'%20y1='22'%20x2='25'%20y2='22'%20stroke='%234a90d9'%20stroke-width='2'%20stroke-linecap='round'/%3E%3Cpolygon%20points='18,28%2015.5,33%2018,31.5%2020.5,33'%20fill='%234a90d9'/%3E%3C/svg%3E">
+<script>
+let saved = null; try { saved = localStorage.getItem('iiw-theme'); } catch (e) {} try { const t = saved === 'light' || saved === 'dark' ? saved : (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'); document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root[data-theme="dark"] {
+    color-scheme: dark;
     --bg:          #0d1117;
     --surface:     #161b22;
     --surface2:    #1c2333;
@@ -19,14 +26,18 @@
     --silver-dim:  #7a9ab8;
     --text:        #dce8f0;
     --text-mid:    #8a9bb5;
-    --text-dim:    #4e5d74;
+    --text-dim:    #8090aa;
     --accent-glow: rgba(74,144,217,0.12);
     --warn-bg:     #161d28;
     --warn-border: rgba(74,144,217,0.2);
     --header-bg:   #0d1117;
     --chip-bg:     #1c2333;
+    --btn-bg:      #2f6fb8;
+    --ok:          #4caf82;
+    --err:         #e46a6a;
   }
   :root[data-theme="light"] {
+    color-scheme: light;
     --bg:          #f5f2ed;
     --surface:     #fdfaf7;
     --surface2:    #eeeae4;
@@ -38,15 +49,72 @@
     --silver-dim:  #4a6a8a;
     --text:        #1a1814;
     --text-mid:    #5a5248;
-    --text-dim:    #9c9488;
+    --text-dim:    #6b6459;
     --accent-glow: rgba(30,95,168,0.08);
     --warn-bg:     #eeeae4;
     --warn-border: #c8c0b4;
     --header-bg:   #eeeae4;
     --chip-bg:     #eeeae4;
+    --btn-bg:      #1e5fa8;
+    --ok:          #1b7448;
+    --err:         #b23a3a;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  button, input { -webkit-tap-highlight-color: transparent; }
+  button, a, input { touch-action: manipulation; }
+
+  /* Hover styles only on devices that really hover. Kept ahead of the rules that
+     must win over hover (.open, .mic-on, [aria-busy]) so the cascade is unchanged. */
+  @media (hover: hover) {
+    .theme-btn:hover { border-color: var(--border-s); color: var(--text-mid); }
+    .search-btn:hover { background: var(--blue-dim); }
+    .topic-tag:hover { border-color: var(--border-s); color: var(--text); }
+    .retry-btn:hover { border-color: var(--border-s); }
+    .more-btn:hover { border-color: var(--border-s); color: var(--text); }
+    .more-btn[aria-busy="true"]:hover { border-color: var(--border); }
+    .toggle-btn:hover { border-color: var(--border-s); color: var(--text-mid); }
+    .mem-mic-btn:hover { border-color: var(--border-s); color: var(--text-mid); }
+    .mem-restart:hover { border-color: var(--border-s); }
+  }
+  @media (hover: none) {
+    .toggle-btn:active, .topic-tag:active, .more-btn:active, .retry-btn:active, .theme-btn:active { border-color: var(--border-s); }
+  }
+
+  /* Keyboard focus */
+  button:focus-visible, .skip-link:focus { outline: 2px solid var(--blue); outline-offset: 2px; }
+  main:focus { outline: none; }   /* focus target of the skip link, not a control */
+  .results-heading:focus { outline: none; }   /* focus is moved here after a search; it is not a control */
+
+  /* Skip link: off-screen until focused */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 10;
+    padding: 8px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+  }
+  .skip-link:focus { left: 8px; top: 8px; }
+
+  /* Visually hidden, still read by screen readers */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
   html, body {
     min-height: 100%;
     background: var(--bg);
@@ -91,7 +159,6 @@
     cursor: pointer;
     transition: border-color 0.15s, color 0.15s;
   }
-  .theme-btn:hover { border-color: var(--border-s); color: var(--text-mid); }
 
   .emblem {
     width: 36px; height: 36px;
@@ -138,7 +205,7 @@
     transition: border-color 0.15s;
     min-width: 0;
   }
-  .search-field:focus-within { border-color: var(--border-s); }
+  .search-field:focus-within { border-color: var(--border-s); outline: 2px solid var(--blue); outline-offset: 2px; }
   input[type="text"] {
     flex: 1;
     padding: 13px 14px;
@@ -153,7 +220,7 @@
   input::placeholder { color: var(--text-dim); }
   .search-btn {
     padding: 0 20px;
-    background: var(--blue);
+    background: var(--btn-bg);
     color: #fff;
     font-family: 'Inter', sans-serif;
     font-size: 13px;
@@ -164,8 +231,7 @@
     transition: background 0.15s;
     white-space: nowrap;
   }
-  .search-btn:hover { background: var(--blue-dim); }
-  .search-btn:disabled { opacity: 0.4; cursor: default; }
+  .search-btn[aria-busy="true"] { opacity: 0.4; cursor: default; }
 
   /* ── Topics ── */
   .topics-wrap {
@@ -192,7 +258,6 @@
     cursor: pointer;
     transition: border-color 0.15s, color 0.15s;
   }
-  .topic-tag:hover { border-color: var(--border-s); color: var(--text); }
 
   /* ── Results ── */
   .results-wrap {
@@ -207,7 +272,8 @@
     font-size: 14px;
     font-style: italic;
     color: var(--text-dim);
-    margin-bottom: 18px;
+    margin: 0 0 18px;
+    font-weight: normal;
   }
 
   /* Loading */
@@ -252,7 +318,6 @@
     color: var(--text-mid);
     cursor: pointer;
   }
-  .retry-btn:hover { border-color: var(--border-s); }
   .more-wrap { text-align: center; margin-top: 18px; }
   .more-btn {
     display: inline-block;
@@ -266,8 +331,6 @@
     cursor: pointer;
     transition: border-color 0.15s, color 0.15s;
   }
-  .more-btn:hover { border-color: var(--border-s); color: var(--text); }
-  .more-btn:disabled { cursor: default; color: var(--text-dim); border-color: var(--border); }
 
   /* ── Verse cards ── */
   .verse-list { display: flex; flex-direction: column; gap: 12px; }
@@ -292,6 +355,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 10px;
     margin-bottom: 11px;
   }
   .verse-ref-text {
@@ -299,6 +363,7 @@
     font-size: 12px;
     font-weight: 500;
     color: var(--blue);
+    min-width: 0;
   }
   .verse-translation {
     font-family: 'Inter', sans-serif;
@@ -346,9 +411,10 @@
     transition: border-color 0.15s, color 0.15s;
     text-align: center;
   }
-  .toggle-btn:hover { border-color: var(--border-s); color: var(--text-mid); }
   .toggle-btn.open { border-color: var(--border-s); color: var(--text-mid); }
-  .toggle-btn:disabled { opacity: 0.35; cursor: default; }
+  .toggle-btn[aria-busy="true"], .more-btn[aria-busy="true"] { cursor: default; color: var(--text-dim); }
+  .toggle-btn[aria-busy="true"] { opacity: 0.35; }
+  .more-btn[aria-busy="true"] { border-color: var(--border); }
 
   /* Context block */
   .context-block {
@@ -389,6 +455,7 @@
     background: var(--surface2);
     border: 1px solid var(--border);
     border-radius: 6px;
+    scroll-margin: 16px;
   }
   .prayer-label {
     font-family: 'Inter', sans-serif;
@@ -403,6 +470,7 @@
     font-size: 18px;
     line-height: 1.75;
     color: var(--text);
+    white-space: pre-line;
   }
   .prayer-loading {
     font-family: 'EB Garamond', serif;
@@ -415,7 +483,12 @@
     100% { border-color: var(--border); box-shadow: 0 0 0 0 color-mix(in srgb, var(--blue) 0%, transparent); }
   }
   .prayer-block.is-new { animation: prayer-glow 2s ease-out 0.3s both; }
-  @media (prefers-reduced-motion: reduce) { .prayer-block.is-new { animation: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .prayer-block.is-new { animation: none; }
+    .verse-card { opacity: 1; transform: none; animation: none; }
+    html .mem-mic-btn.mic-on .mic-dot { animation: none; }   /* html prefix: the base .mic-on rule is defined later in the file */
+    *, *::before, *::after { transition: none !important; }
+  }
 
   /* ── Memorize block ── */
   .mem-block {
@@ -459,10 +532,9 @@
     gap: 5px;
     white-space: nowrap;
   }
-  .mem-mic-btn:hover { border-color: var(--border-s); color: var(--text-mid); }
   .mem-mic-btn.mic-on {
-    border-color: #d05050;
-    color: #d05050;
+    border-color: var(--err);
+    color: var(--err);
     background: rgba(208,80,80,0.08);
   }
   .mem-mic-btn.mic-on .mic-dot {
@@ -479,7 +551,7 @@
     50% { opacity: 0.3; }
   }
   .mem-blank.listening {
-    border-bottom-color: #d05050;
+    border-bottom-color: var(--err);
     background: rgba(208,80,80,0.06);
   }
   .mem-rounds {
@@ -518,8 +590,9 @@
     transition: border-color 0.15s;
   }
   .mem-blank:focus { border-color: var(--blue); }
-  .mem-blank.correct { border-color: #4caf82; color: #4caf82; }
-  .mem-blank.wrong   { border-color: #d05050; color: #d05050; }
+  .mem-blank:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .mem-blank.correct { border-color: var(--ok); color: var(--ok); }
+  .mem-blank.wrong   { border-color: var(--err); color: var(--err); }
 
   .mem-footer {
     padding: 10px 15px 13px;
@@ -533,8 +606,8 @@
     color: var(--text-mid);
     flex: 1;
   }
-  .mem-feedback.good { color: #4caf82; }
-  .mem-feedback.bad  { color: #d05050; }
+  .mem-feedback.good { color: var(--ok); }
+  .mem-feedback.bad  { color: var(--err); }
 
   .mem-complete {
     padding: 20px 15px;
@@ -562,7 +635,6 @@
     cursor: pointer;
     transition: border-color 0.15s;
   }
-  .mem-restart:hover { border-color: var(--border-s); }
 
   /* Footer */
   footer {
@@ -577,49 +649,41 @@
     color: var(--text-dim);
     line-height: 1.6;
   }
-  .open-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 12px;
-    padding: 8px 14px;
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    color: var(--text-mid);
-    text-decoration: none;
-    transition: border-color 0.15s, color 0.15s;
-    cursor: pointer;
+
+  /* ── Touch targets (phones and tablets) ── */
+  @media (pointer: coarse) {
+    .topic-tag, .toggle-btn, .more-btn, .retry-btn, .theme-btn { min-height: 44px; }
+    .search-btn { min-height: 48px; }
   }
-  .open-btn:hover { border-color: var(--border-s); color: var(--text); }
-  .open-btn svg { flex-shrink: 0; }
 </style>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div id="status" class="sr-only" role="status" aria-live="polite"></div>
 
 <header>
   <div class="header-row">
-    <button class="theme-btn" id="themeBtn">Light</button>
+    <button class="theme-btn" id="themeBtn" aria-label="Switch to light theme">Light</button>
   </div>
 
   <div class="emblem">
-    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
       <line x1="18" y1="2" x2="18" y2="28" stroke="#4a90d9" stroke-width="2" stroke-linecap="round"/>
       <line x1="11" y1="22" x2="25" y2="22" stroke="#4a90d9" stroke-width="2" stroke-linecap="round"/>
       <polygon points="18,28 15.5,33 18,31.5 20.5,33" fill="#4a90d9"/>
     </svg>
   </div>
 
-  <h1>It Is Written</h1>
+  <h1 translate="no">It Is Written</h1>
   <p class="tagline">The sword of the Spirit — Ephesians 6:17</p>
 </header>
+
+<main id="main" tabindex="-1">
 
 <div class="search-wrap">
   <div class="search-row">
     <div class="search-field">
-      <input type="text" id="searchInput" placeholder="Search a topic — fear, hope, healing…" autocomplete="off" maxlength="80" />
+      <input type="text" id="searchInput" aria-label="Search a topic" name="q" inputmode="search" enterkeyhint="search" placeholder="Search a topic — fear, hope, healing…" autocomplete="off" maxlength="80" />
     </div>
     <button class="search-btn" id="searchBtn">Search</button>
   </div>
@@ -637,6 +701,8 @@
   </div>
 </div>
 
+</main>
+
 <footer>
   <p>Verses drawn from multiple translations. Always read in full context of Scripture.</p>
 </footer>
@@ -648,18 +714,37 @@ const TOPICS = [
   'Courage','Wisdom','Identity','Prayer'
 ];
 const MAX_VERSES = 25;   // most verses shown for one search ("More verses" stops here)
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Polite screen-reader announcement (clear first so repeated text is read again).
+function announce(text) {
+  const el = document.getElementById('status');
+  if (!el) return;
+  el.textContent = '';
+  setTimeout(() => { el.textContent = text; }, 30);
+}
 
 const topicsEl   = document.getElementById('topics');
 const searchInput= document.getElementById('searchInput');
 const searchBtn  = document.getElementById('searchBtn');
 const resultsWrap= document.getElementById('resultsWrap');
 const themeBtn   = document.getElementById('themeBtn');
+const themeColorMeta = document.getElementById('themeColor');
+const EMPTY_STATE_HTML = resultsWrap.innerHTML;   // captured at load; restored when history goes back to no search
 
-let currentTheme = 'dark';
+// The theme is chosen before first paint by the small inline script in the document head (saved choice, else the device setting).
+function syncThemeUi() {
+  const dark = document.documentElement.getAttribute('data-theme') !== 'light';
+  themeBtn.textContent = dark ? 'Light' : 'Dark';
+  themeBtn.setAttribute('aria-label', `Switch to ${dark ? 'light' : 'dark'} theme`);
+  if (themeColorMeta) themeColorMeta.setAttribute('content', dark ? '#0d1117' : '#f5f2ed');
+}
+syncThemeUi();
 themeBtn.onclick = () => {
-  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', currentTheme);
-  themeBtn.textContent = currentTheme === 'dark' ? 'Light' : 'Dark';
+  const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  syncThemeUi();
+  try { localStorage.setItem('iiw-theme', next); } catch (e) {}
 };
 
 TOPICS.forEach(t => {
@@ -670,8 +755,12 @@ TOPICS.forEach(t => {
   topicsEl.appendChild(tag);
 });
 
-searchBtn.onclick = () => { const q = searchInput.value.trim(); if (q) doSearch(q); };
-searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') { const q = searchInput.value.trim(); if (q) doSearch(q); }});
+// Only the button's own click is ignored while a search is running; Enter or a topic chip still replaces the running search.
+searchBtn.onclick = () => { if (searchBtn.getAttribute('aria-busy') === 'true') return; const q = searchInput.value.trim(); if (q) doSearch(q); };
+searchInput.addEventListener('keydown', e => { if (e.isComposing || e.keyCode === 229) return; if (e.key === 'Enter') { const q = searchInput.value.trim(); if (q) doSearch(q); }});
+
+// Skip link: focus <main> directly. Following "#main" would add a history entry and fire popstate.
+document.querySelector('.skip-link').addEventListener('click', e => { e.preventDefault(); document.getElementById('main').focus(); });
 
 async function askClaude(payload, signal) {
   const res = await fetch('/api/claude', {
@@ -691,50 +780,80 @@ async function askClaude(payload, signal) {
 let currentAbort = null;
 let verseStore = {};   // index -> verse; each has contextStatus: 'loading' | 'ready' | 'error'
 let currentTopic = '';
+let lastQuery = '';    // last submitted search, re-run by "Try again"
+let shownQuery = '';   // the query the page is currently showing (or loading); '' = the empty state
 
-async function doSearch(topic) {
+// Focus is only moved for the reader when they haven't gone elsewhere meanwhile (say, started typing a new query).
+// `extra` lets a caller allow more elements.
+function focusIsFree(extra) {
+  const a = document.activeElement;
+  return !a || a === document.body || a === document.documentElement || resultsWrap.contains(a) || !!(extra && extra(a));
+}
+
+async function doSearch(topic, { fromHistory = false } = {}) {
+  if (!topic || !topic.trim()) return;
+  lastQuery = topic;
+  shownQuery = topic.trim().slice(0, 80);   // same normalisation as qFromUrl()
+  // A search the user starts adds a history entry (unless the URL already says so); searches run from the URL or from popstate never do.
+  if (!fromHistory && qFromUrl() !== topic) {
+    try { history.pushState({ q: topic }, '', '?q=' + encodeURIComponent(topic)); } catch (e) {}
+  }
   if (currentAbort) currentAbort.abort();
   currentAbort = new AbortController();
+  const mySignal = currentAbort.signal;
   resultsWrap.innerHTML = `<div class="loading">Searching the Word…</div>`;
-  searchBtn.disabled = true;
+  announce('Searching the Word…');
+  searchBtn.setAttribute('aria-busy', 'true');
 
   try {
-    const result = await askClaude({ action: 'search', topic }, currentAbort.signal);
+    const result = await askClaude({ action: 'search', topic }, mySignal);
     const raw = result.text.replace(/```json|```/gi,'').trim();
     const scriptures = JSON.parse(raw);
     const indexes = showResults(topic, scriptures);
-    if (indexes) loadContext(indexes, currentAbort.signal);
+    if (indexes) {
+      announce(`${indexes.length} ${verseWord(indexes.length)} on ${topic}`);
+      // The input case covers Enter in the box: it still holds exactly what was submitted.
+      if (focusIsFree(a => a === searchBtn || topicsEl.contains(a) || (a === searchInput && searchInput.value.trim() === topic.trim()))) {
+        document.getElementById('resultsHeading')?.focus({ preventScroll: true });
+      }
+      loadContext(indexes, mySignal);
+    }
   } catch(err) {
     if (err && err.name === 'AbortError') return;
     console.error(err);
     showError('Something went wrong. Please try again.');
   } finally {
-    searchBtn.disabled = false;
+    // An aborted search must not clear the busy state of the search that replaced it.
+    if (currentAbort && currentAbort.signal === mySignal) searchBtn.removeAttribute('aria-busy');
   }
 }
 
 function showError(msg) {
-  resultsWrap.innerHTML = `<div class="error-msg"><p>${esc(msg)}</p><button class="retry-btn" onclick="doSearch(document.getElementById('searchInput').value)">Try again</button></div>`;
+  resultsWrap.innerHTML = `<div class="error-msg" role="alert"><p>${esc(msg)}</p><button class="retry-btn" onclick="doSearch(lastQuery)">Try again</button></div>`;   // role="alert" announces it
 }
 
+function verseWord(n) { return n === 1 ? 'verse' : 'verses'; }
+
 function cardHtml(s, i) {
+  const ref = String(s.ref || '');
+  const refShown = esc(ref.replace(/^(\d)\s/, '$1\u00a0'));   // keep "1 John" together on one line (display only)
   return `
-    <div class="verse-card" id="card-${i}">
+    <article class="verse-card" id="card-${i}" aria-labelledby="ref-${i}">
       <div class="verse-ref">
-        <span class="verse-ref-text">${esc(s.ref||'')}</span>
+        <span class="verse-ref-text" id="ref-${i}">${refShown}</span>
         <span class="verse-translation">${esc(s.translation||'')}</span>
       </div>
       <div class="verse-text">${esc(s.verse||'')}</div>
       ${s.note ? `<div class="verse-note">${esc(s.note)}</div>` : ''}
       <div class="btn-row">
-        <button class="toggle-btn" id="ctx-btn-${i}" onclick="toggleContext(${i})">Context &amp; insight</button>
-        <button class="toggle-btn" id="pray-btn-${i}" onclick="generatePrayer(${i})">Pray this</button>
-        <button class="toggle-btn" id="mem-btn-${i}" onclick="toggleMemorize(${i})">Memorize</button>
+        <button class="toggle-btn" id="ctx-btn-${i}" onclick="toggleContext(${i})" aria-expanded="false" aria-controls="context-${i}" aria-describedby="ref-${i}">Context &amp; insight</button>
+        <button class="toggle-btn" id="pray-btn-${i}" onclick="generatePrayer(${i})" aria-expanded="false" aria-controls="prayer-${i}" aria-describedby="ref-${i}">Pray this</button>
+        <button class="toggle-btn" id="mem-btn-${i}" onclick="toggleMemorize(${i})" aria-expanded="false" aria-controls="memorize-${i}" aria-describedby="ref-${i}">Memorize</button>
       </div>
       <div id="context-${i}" style="display:none;"></div>
       <div id="prayer-${i}"></div>
       <div id="memorize-${i}" style="display:none;"></div>
-    </div>`;
+    </article>`;
 }
 
 // Appends scriptures to verseStore at the next free indexes; returns those indexes.
@@ -749,12 +868,13 @@ function addVerses(scriptures) {
 
 function updateHeading() {
   const el = document.querySelector('.results-heading');
-  if (el) el.innerHTML = `${Object.keys(verseStore).length} verses on ${esc(currentTopic)}`;
+  const n = Object.keys(verseStore).length;
+  if (el) el.innerHTML = `${n} ${verseWord(n)} on ${esc(currentTopic)}`;
 }
 
 function moreButtonHtml() {
   if (Object.keys(verseStore).length >= MAX_VERSES) return '';
-  return `<div class="more-wrap"><button class="more-btn" id="moreBtn" onclick="loadMore()">More verses</button></div>`;
+  return `<div class="more-wrap"><button class="more-btn" id="moreBtn" onclick="loadMore()" aria-controls="verseList">More verses</button></div>`;
 }
 
 function showResults(topic, scriptures) {
@@ -763,7 +883,8 @@ function showResults(topic, scriptures) {
   currentTopic = topic;
   const indexes = addVerses(scriptures);
 
-  const heading = `<p class="results-heading">${Object.keys(verseStore).length} verses on ${esc(topic)}</p>`;
+  const n = Object.keys(verseStore).length;
+  const heading = `<h2 class="results-heading" id="resultsHeading" tabindex="-1">${n} ${verseWord(n)} on ${esc(topic)}</h2>`;
   const cards = scriptures.map((s, i) => cardHtml(s, i)).join('');
 
   resultsWrap.innerHTML = heading + `<div class="verse-list" id="verseList">${cards}</div>` + moreButtonHtml();
@@ -773,8 +894,10 @@ function showResults(topic, scriptures) {
 async function loadMore() {
   const btn = document.getElementById('moreBtn');
   if (!btn || !currentTopic) return;
-  btn.disabled = true;
+  if (btn.getAttribute('aria-busy') === 'true') return;
+  btn.setAttribute('aria-busy', 'true');
   btn.textContent = 'Searching the Word…';
+  announce('Loading more verses…');
   const signal = currentAbort ? currentAbort.signal : undefined;
   try {
     const exclude = Object.values(verseStore).map(v => v.ref).filter(Boolean).slice(-30);
@@ -784,22 +907,28 @@ async function loadMore() {
     const seen = new Set(Object.values(verseStore).map(v => String(v.ref).toLowerCase()));
     const fresh = (Array.isArray(scriptures) ? scriptures : []).filter(s => s && s.ref && !seen.has(String(s.ref).toLowerCase()))
       .slice(0, Math.max(0, Math.min(5, MAX_VERSES - Object.keys(verseStore).length)));
-    if (!fresh.length) { btn.textContent = 'No more verses found.'; return; }
+    // Nothing new: the button stays inert (aria-busy left on), as it used to stay disabled.
+    if (!fresh.length) { btn.textContent = 'No more verses found.'; announce('No more verses found.'); return; }
+    const mayFocus = focusIsFree();
     const indexes = addVerses(fresh);
     document.getElementById('verseList').insertAdjacentHTML('beforeend', indexes.map((i, n) => cardHtml(fresh[n], i)).join(''));
     updateHeading();
+    announce(`${indexes.length} more ${verseWord(indexes.length)} added`);
     if (Object.keys(verseStore).length >= MAX_VERSES) {
       btn.parentElement.remove();
     } else {
-      btn.disabled = false;
+      btn.removeAttribute('aria-busy');
       btn.textContent = 'More verses';
     }
+    const firstNew = document.getElementById(`ctx-btn-${indexes[0]}`);
+    if (firstNew && mayFocus) firstNew.focus({ preventScroll: true });
     loadContext(indexes, signal);
   } catch (err) {
     if (err && err.name === 'AbortError') return;
     console.error(err);
-    btn.disabled = false;
+    btn.removeAttribute('aria-busy');
     btn.textContent = 'Couldn’t load more. Try again';
+    announce('Couldn’t load more. Try again');
   }
 }
 
@@ -819,6 +948,7 @@ async function loadContext(indexes, signal) {
       verseStore[i].application = c.application || '';
       verseStore[i].contextStatus = 'ready';
     });
+    announce('Context ready');
   } catch (err) {
     if (err && err.name === 'AbortError') return;
     console.error(err);
@@ -869,6 +999,7 @@ function toggleContext(index) {
     div.style.display = 'none';
     btn.classList.remove('open');
     btn.textContent = 'Context & insight';
+    btn.setAttribute('aria-expanded', 'false');
     return;
   }
 
@@ -877,6 +1008,7 @@ function toggleContext(index) {
   div.style.display = 'block';
   btn.classList.add('open');
   btn.textContent = 'Hide context';
+  btn.setAttribute('aria-expanded', 'true');
 }
 
 async function generatePrayer(index) {
@@ -884,17 +1016,22 @@ async function generatePrayer(index) {
   const prayerDiv = document.getElementById(`prayer-${index}`);
   const data = verseStore[index];
   if (!btn || !prayerDiv || !data) return;
+  if (btn.getAttribute('aria-busy') === 'true') return;
 
-  if (prayerDiv.innerHTML) {
+  if (prayerDiv.innerHTML && !prayerDiv.dataset.error) {
     prayerDiv.innerHTML = '';
     btn.classList.remove('open');
     btn.textContent = 'Pray this';
+    btn.setAttribute('aria-expanded', 'false');
     return;
   }
+  delete prayerDiv.dataset.error;   // a failed attempt is retried from scratch
 
-  btn.disabled = true;
+  const startY = window.scrollY;
+  btn.setAttribute('aria-busy', 'true');
   btn.textContent = 'Writing…';
   prayerDiv.innerHTML = `<div class="prayer-block"><div class="prayer-loading">Lifting this Word in prayer…</div></div>`;
+  announce('Writing a prayer…');
 
   try {
     const result = await askClaude({ action: 'prayer', ref: data.ref, verse: data.verse, topic: data.topic });
@@ -903,19 +1040,27 @@ async function generatePrayer(index) {
         <div class="prayer-label">A prayer</div>
         <div class="prayer-text">${esc(result.text.trim())}</div>
       </div>`;
-    btn.disabled = false;
+    btn.removeAttribute('aria-busy');
     btn.classList.add('open');
     btn.textContent = 'Hide prayer';
+    btn.setAttribute('aria-expanded', 'true');
+    if (btn.isConnected) announce('Prayer ready for ' + data.ref);
     const block = prayerDiv.querySelector('.prayer-block');
     if (block) {
       block.addEventListener('animationend', () => block.classList.remove('is-new'), { once: true });
-      block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Scroll only if the reader hasn't moved and the prayer isn't already fully on screen.
+      const r = block.getBoundingClientRect();
+      const stayedPut = Math.abs(window.scrollY - startY) < 4;
+      const fullyVisible = r.top >= 0 && r.bottom <= window.innerHeight;
+      if (stayedPut && !fullyVisible) block.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
     }
   } catch(err) {
     console.error(err);
-    prayerDiv.innerHTML = '';
-    btn.disabled = false;
+    btn.removeAttribute('aria-busy');
+    prayerDiv.innerHTML = `<div class="prayer-block" role="alert"><div class="prayer-loading">Couldn’t write a prayer right now. Try again.</div></div>`;
+    prayerDiv.dataset.error = '1';
     btn.textContent = 'Pray this';
+    btn.setAttribute('aria-expanded', 'false');
   }
 }
 
@@ -923,10 +1068,13 @@ async function generatePrayer(index) {
 const MEM_ROUNDS = [0.25, 0.5, 0.75, 1.0];
 let memState = {};
 
-// Tiny Web Audio ding — no file needed
+// Tiny Web Audio ding — no file needed. One AudioContext is created on first use and reused.
+let audioCtx = null;
 function playDing() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = audioCtx;
+    if (ctx.state === 'suspended') ctx.resume();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
@@ -952,15 +1100,29 @@ function toggleMemorize(index) {
     div.style.display = 'none';
     btn.classList.remove('open');
     btn.textContent = 'Memorize';
+    btn.setAttribute('aria-expanded', 'false');
     delete memState[index];
     return;
   }
+
+  // Nothing to blank out (empty or punctuation-only verse): leave everything as it is.
+  if (chooseBlankIndices(tokenize(data.verse), MEM_ROUNDS[0]).size === 0) return;
 
   memState[index] = { round: 0 };
   renderMemRound(index);
   div.style.display = 'block';
   btn.classList.add('open');
   btn.textContent = 'Close';
+  btn.setAttribute('aria-expanded', 'true');
+}
+
+// A word reduced to what has to be typed: lower case, curly quotes straightened, punctuation dropped.
+function normWord(s) { return String(s).toLowerCase().replace(/[’‘]/g, "'").replace(/[“”]/g, '"').replace(/[^\p{L}\p{N}']/gu, ''); }
+
+// Typed text solves a blank when it normalises to the word, with or without apostrophes ("LORD’s" takes "lord's" or "lords").
+function matchesAnswer(typed, answer) {
+  const given = normWord(typed);
+  return given !== '' && (given === answer || given === answer.replace(/'/g, ''));
 }
 
 function tokenize(verse) {
@@ -968,27 +1130,19 @@ function tokenize(verse) {
   const re = /(\s*)(\S+)/g;
   let m;
   while ((m = re.exec(verse)) !== null) {
-    const raw = m[2];
-    // strip leading/trailing punctuation to get the matchable core
-    const clean = raw.replace(/[.,;:!?"'()\-—]+$/, '').replace(/^['"(—]+/, '');
-    // leading/trailing punctuation pieces for display restoration
-    const leadPunct  = raw.slice(0, raw.length - raw.replace(/^['"(—]+/, '').length);
-    const trailPunct = raw.slice(raw.replace(/[.,;:!?"'()\-—]+$/, '').length);
-    tokens.push({ raw, clean, space: m[1], leadPunct, trailPunct });
+    // key is empty for punctuation-only tokens (a spaced dash, an ellipsis, a lone apostrophe): those are never blanked
+    tokens.push({ raw: m[2], key: normWord(m[2]).replace(/^'+$/, ''), space: m[1] });
   }
   return tokens;
-}
-
-// Rebuild display value: preserve original capitalisation and surround with punctuation
-function displayForm(token) {
-  return token.leadPunct + token.clean + token.trailPunct;
 }
 
 function chooseBlankIndices(tokens, fraction) {
   const isRound4 = fraction >= 1.0;
   const eligible = tokens
-    .map((t, i) => ({ i, len: t.clean.length }))
-    .filter(t => isRound4 ? true : t.len > 2);
+    .map((t, i) => ({ i, len: t.key.length }))
+    .filter(t => t.len > 0 && (isRound4 || t.len > 2));
+  if (!eligible.length) return new Set();
+  if (isRound4) return new Set(eligible.map(t => t.i));
   const count = Math.max(1, Math.round(eligible.length * fraction));
   const step = eligible.length / count;
   const chosen = new Set();
@@ -996,10 +1150,6 @@ function chooseBlankIndices(tokens, fraction) {
     chosen.add(eligible[Math.min(eligible.length - 1, Math.round(k * step + step / 2))].i);
   }
   return chosen;
-}
-
-function normalize(str) {
-  return str.toLowerCase().replace(/[.,;:!?"'()\-—]/g, '').trim();
 }
 
 function renderMemRound(index) {
@@ -1022,12 +1172,11 @@ function renderMemRound(index) {
   let verseHtml = '';
   const blankList = []; // ordered list of token indices that are blanked
   tokens.forEach((t, i) => {
-    const spaceHtml = t.space ? t.space.replace(/ /g, '&nbsp;') : '';
+    const spaceHtml = t.space ? ' ' : '';   // ordinary space so the verse can wrap
     if (state.blanks.has(i)) {
       blankList.push(i);
-      const w = Math.max(40, (t.clean.length + t.leadPunct.length + t.trailPunct.length) * 11);
-      const disp = displayForm(t).replace(/"/g, '&quot;');
-      verseHtml += spaceHtml + `<input class="mem-blank" id="mb-${index}-${i}" data-answer="${normalize(t.clean).replace(/"/g,'&quot;')}" data-display="${disp}" data-tidx="${i}" style="width:${w}px" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />`;
+      const w = Math.max(40, t.raw.length * 11);
+      verseHtml += spaceHtml + `<input class="mem-blank" id="mb-${index}-${i}" aria-label="Blank ${blankList.length} of ${state.blanks.size}" data-answer="${esc(t.key)}" data-display="${esc(t.raw)}" data-tidx="${i}" style="width:${w}px" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />`;
     } else {
       verseHtml += spaceHtml + t.raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
@@ -1065,9 +1214,11 @@ function renderMemRound(index) {
     inp.addEventListener('input', () => handleBlankInput(inp, index));
   });
 
+  announce(roundLabel);
+
   // Focus first blank
   const first = div.querySelector('.mem-blank');
-  if (first) setTimeout(() => first.focus(), 80);
+  if (first && window.matchMedia('(pointer: fine)').matches) setTimeout(() => first.focus(), 80);   // not on touch: it would pop the keyboard open
 }
 
 function handleBlankInput(inp, index) {
@@ -1076,9 +1227,8 @@ function handleBlankInput(inp, index) {
   if (inp.classList.contains('correct')) return; // already solved, ignore
 
   const answer = inp.dataset.answer;
-  const given = normalize(inp.value);
 
-  if (given === answer) {
+  if (matchesAnswer(inp.value, answer)) {
     // Correct! Restore original capitalisation and punctuation
     inp.value = inp.dataset.display;
     inp.classList.add('correct');
@@ -1111,6 +1261,7 @@ function roundComplete(index) {
   state.round++;
 
   if (state.round >= MEM_ROUNDS.length) {
+    announce('Well done!');
     const data = verseStore[index];
     const div = document.getElementById(`memorize-${index}`);
     setTimeout(() => {
@@ -1120,6 +1271,8 @@ function roundComplete(index) {
           <p style="margin-top:8px; font-size:15px;">"${esc(data.verse)}"</p>
           <button class="mem-restart" onclick="restartMemorize(${index})">Start over</button>
         </div>`;
+      const again = div.querySelector('.mem-restart');
+      if (again) again.focus({ preventScroll: true });
     }, 400);
   } else {
     if (fb) { fb.textContent = 'Well done!'; fb.className = 'mem-feedback good'; }
@@ -1211,12 +1364,12 @@ function startMic(index) {
     // Check all alternatives from the latest result
     const result = event.results[event.results.length - 1];
     for (let a = 0; a < result.length; a++) {
-      const spoken = normalize(result[a].transcript);
-      // Also try just the last word spoken in case they said extra words
-      const spokenLast = spoken.split(/\s+/).pop();
+      const words = result[a].transcript.trim().split(/\s+/);
+      // Try just the last word spoken in case they said extra words
+      const spokenLast = words[words.length - 1];
 
-      if (spoken === normalize(inp.dataset.answer) || spokenLast === normalize(inp.dataset.answer)) {
-        inp.value = spokenLast === normalize(inp.dataset.answer) ? spokenLast : spoken;
+      if (matchesAnswer(spokenLast, inp.dataset.answer)) {
+        inp.value = spokenLast;
         inp.dispatchEvent(new Event('input'));
         // After a short pause highlight the next blank
         setTimeout(() => { if (state.micOn) focusListeningBlank(index); }, 500);
@@ -1260,6 +1413,32 @@ function startMic(index) {
 function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ── Search state in the URL (?q=…) ────────────────────────
+function qFromUrl() {
+  return (new URLSearchParams(location.search).get('q') || '').trim().slice(0, 80);   // 80 = the input's maxlength
+}
+
+function restoreEmptyState() {
+  if (currentAbort) currentAbort.abort();
+  resultsWrap.innerHTML = EMPTY_STATE_HTML;
+  searchInput.value = '';
+  verseStore = {};
+  shownQuery = '';
+  searchBtn.removeAttribute('aria-busy');
+}
+
+window.addEventListener('popstate', e => {
+  // Hash-only changes and the like leave the page showing what the URL already says: do nothing.
+  if (qFromUrl() === shownQuery) return;
+  const q = (e.state && typeof e.state.q === 'string' && e.state.q.trim()) || qFromUrl();
+  if (q) { searchInput.value = q; doSearch(q, { fromHistory: true }); }
+  else restoreEmptyState();
+});
+
+// Opened (or reloaded) with ?q=… : fill the box and run that search.
+const initialQuery = qFromUrl();
+if (initialQuery) { searchInput.value = initialQuery; doSearch(initialQuery, { fromHistory: true }); }
 </script>
 </body>
 </html>
