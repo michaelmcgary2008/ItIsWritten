@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>It Is Written</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root[data-theme="dark"] {
+    --bg:          #0d1117;
+    --surface:     #161b22;
+    --surface2:    #1c2333;
+    --border:      rgba(100,140,200,0.16);
+    --border-s:    rgba(100,160,220,0.38);
+    --blue:        #4a90d9;
+    --blue-dim:    #2a5a8a;
+    --silver:      #c8d8e8;
+    --silver-dim:  #7a9ab8;
+    --text:        #dce8f0;
+    --text-mid:    #8a9bb5;
+    --text-dim:    #4e5d74;
+    --accent-glow: rgba(74,144,217,0.12);
+    --warn-bg:     #161d28;
+    --warn-border: rgba(74,144,217,0.2);
+    --header-bg:   #0d1117;
+    --chip-bg:     #1c2333;
+  }
+  :root[data-theme="light"] {
+    --bg:          #f5f2ed;
+    --surface:     #fdfaf7;
+    --surface2:    #eeeae4;
+    --border:      #dbd5cc;
+    --border-s:    #a8a094;
+    --blue:        #1e5fa8;
+    --blue-dim:    #174d8c;
+    --silver:      #1c3a58;
+    --silver-dim:  #4a6a8a;
+    --text:        #1a1814;
+    --text-mid:    #5a5248;
+    --text-dim:    #9c9488;
+    --accent-glow: rgba(30,95,168,0.08);
+    --warn-bg:     #eeeae4;
+    --warn-border: #c8c0b4;
+    --header-bg:   #eeeae4;
+    --chip-bg:     #eeeae4;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    transition: background 0.2s, color 0.2s;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 20px 22px;
+    text-align: center;
+    position: relative;
+  }
+  .header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 14px;
+  }
+  .theme-btn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 11px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .theme-btn:hover { border-color: var(--border-s); color: var(--text-mid); }
+
+  .emblem {
+    width: 36px; height: 36px;
+    margin: 0 auto 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .emblem svg { width: 36px; height: 36px; }
+
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(20px, 5.5vw, 27px);
+    font-weight: 600;
+    color: var(--silver);
+    letter-spacing: 0.1em;
+    line-height: 1.1;
+  }
+  .tagline {
+    font-family: 'EB Garamond', serif;
+    font-size: 14px;
+    font-style: italic;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+
+  /* ── Search ── */
+  .search-wrap {
+    padding: 20px 20px 0;
+    max-width: 560px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .search-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .search-field {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    transition: border-color 0.15s;
+    min-width: 0;
+  }
+  .search-field:focus-within { border-color: var(--border-s); }
+  input[type="text"] {
+    flex: 1;
+    padding: 13px 14px;
+    font-family: 'EB Garamond', serif;
+    font-size: 17px;
+    color: var(--text);
+    background: transparent;
+    border: none;
+    outline: none;
+    min-width: 0;
+  }
+  input::placeholder { color: var(--text-dim); }
+  .search-btn {
+    padding: 0 20px;
+    background: var(--blue);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .search-btn:hover { background: var(--blue-dim); }
+  .search-btn:disabled { opacity: 0.4; cursor: default; }
+
+  /* ── Topics ── */
+  .topics-wrap {
+    padding: 14px 20px 0;
+    max-width: 560px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .topics-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .topics { display: flex; flex-wrap: wrap; gap: 6px; }
+  .topic-tag {
+    padding: 4px 12px;
+    background: var(--chip-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: 'EB Garamond', serif;
+    font-size: 15px;
+    color: var(--text-mid);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .topic-tag:hover { border-color: var(--border-s); color: var(--text); }
+
+  /* ── Results ── */
+  .results-wrap {
+    flex: 1;
+    padding: 22px 20px 36px;
+    max-width: 560px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .results-heading {
+    font-family: 'EB Garamond', serif;
+    font-size: 14px;
+    font-style: italic;
+    color: var(--text-dim);
+    margin-bottom: 18px;
+  }
+
+  /* Loading */
+  .loading {
+    padding: 52px 0;
+    text-align: center;
+    font-family: 'EB Garamond', serif;
+    font-size: 16px;
+    font-style: italic;
+    color: var(--text-dim);
+  }
+
+  /* Empty */
+  .empty-state { padding: 40px 0; }
+  .empty-state p {
+    font-family: 'EB Garamond', serif;
+    font-size: 20px;
+    color: var(--text-dim);
+    line-height: 1.65;
+    max-width: 300px;
+  }
+  .empty-state cite {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-style: normal;
+    color: var(--text-dim);
+    margin-top: 8px;
+  }
+
+  /* Error */
+  .error-msg { padding: 32px 0; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text-mid); }
+  .retry-btn {
+    margin-top: 10px;
+    display: inline-block;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--text-mid);
+    cursor: pointer;
+  }
+  .retry-btn:hover { border-color: var(--border-s); }
+
+  /* ── Verse cards ── */
+  .verse-list { display: flex; flex-direction: column; gap: 12px; }
+  .verse-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--blue);
+    border-radius: 0 8px 8px 0;
+    padding: 20px 20px 16px;
+    opacity: 0;
+    transform: translateY(8px);
+    animation: rise 0.3s ease forwards;
+  }
+  .verse-card:nth-child(1) { animation-delay: 0.04s; }
+  .verse-card:nth-child(2) { animation-delay: 0.10s; }
+  .verse-card:nth-child(3) { animation-delay: 0.16s; }
+  .verse-card:nth-child(4) { animation-delay: 0.22s; }
+  .verse-card:nth-child(5) { animation-delay: 0.28s; }
+  @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+
+  .verse-ref {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 11px;
+  }
+  .verse-ref-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--blue);
+  }
+  .verse-translation {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: var(--text-dim);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 2px 7px;
+  }
+  .verse-text {
+    font-family: 'EB Garamond', serif;
+    font-size: 19px;
+    font-weight: 400;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .verse-note {
+    margin-top: 11px;
+    padding-top: 11px;
+    border-top: 1px solid var(--border);
+    font-family: 'EB Garamond', serif;
+    font-size: 15px;
+    color: var(--text-mid);
+    line-height: 1.6;
+  }
+
+  /* Toggle buttons */
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .toggle-btn {
+    flex: 1;
+    padding: 8px 10px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    text-align: center;
+  }
+  .toggle-btn:hover { border-color: var(--border-s); color: var(--text-mid); }
+  .toggle-btn.open { border-color: var(--border-s); color: var(--text-mid); }
+  .toggle-btn:disabled { opacity: 0.35; cursor: default; }
+
+  /* Context block */
+  .context-block {
+    margin-top: 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .ctx-section {
+    padding: 13px 15px;
+    border-bottom: 1px solid var(--border);
+  }
+  .ctx-section:last-child { border-bottom: none; }
+  .ctx-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    margin-bottom: 5px;
+  }
+  .ctx-text {
+    font-family: 'EB Garamond', serif;
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--text-mid);
+  }
+  .ctx-section.caution {
+    background: var(--warn-bg);
+  }
+  .ctx-section.caution .ctx-label { color: var(--blue); }
+  .ctx-section.caution .ctx-text { color: var(--text); }
+
+  /* Prayer block */
+  .prayer-block {
+    margin-top: 10px;
+    padding: 16px 16px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .prayer-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+  }
+  .prayer-text {
+    font-family: 'EB Garamond', serif;
+    font-size: 18px;
+    line-height: 1.75;
+    color: var(--text);
+  }
+  .prayer-loading {
+    font-family: 'EB Garamond', serif;
+    font-size: 15px;
+    font-style: italic;
+    color: var(--text-dim);
+  }
+
+  /* ── Memorize block ── */
+  .mem-block {
+    margin-top: 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .mem-header {
+    padding: 11px 15px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface2);
+  }
+  .mem-header-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+  }
+  .mem-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .mem-mic-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 3px 9px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .mem-mic-btn:hover { border-color: var(--border-s); color: var(--text-mid); }
+  .mem-mic-btn.mic-on {
+    border-color: #d05050;
+    color: #d05050;
+    background: rgba(208,80,80,0.08);
+  }
+  .mem-mic-btn.mic-on .mic-dot {
+    animation: mic-pulse 1s ease-in-out infinite;
+  }
+  .mic-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+  @keyframes mic-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .mem-blank.listening {
+    border-bottom-color: #d05050;
+    background: rgba(208,80,80,0.06);
+  }
+  .mem-rounds {
+    display: flex;
+    gap: 4px;
+  }
+  .mem-round-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    border: 1px solid var(--border-s);
+    background: transparent;
+    transition: background 0.2s;
+  }
+  .mem-round-dot.done { background: var(--blue); border-color: var(--blue); }
+  .mem-round-dot.active { background: transparent; border-color: var(--blue); }
+
+  .mem-verse {
+    padding: 16px 15px 14px;
+    font-family: 'EB Garamond', serif;
+    font-size: 19px;
+    line-height: 2;
+    color: var(--text);
+  }
+  .mem-blank {
+    display: inline-block;
+    border: none;
+    border-bottom: 1.5px solid var(--border-s);
+    background: transparent;
+    font-family: 'EB Garamond', serif;
+    font-size: 19px;
+    color: var(--text);
+    outline: none;
+    padding: 0 2px;
+    vertical-align: baseline;
+    min-width: 24px;
+    transition: border-color 0.15s;
+  }
+  .mem-blank:focus { border-color: var(--blue); }
+  .mem-blank.correct { border-color: #4caf82; color: #4caf82; }
+  .mem-blank.wrong   { border-color: #d05050; color: #d05050; }
+
+  .mem-footer {
+    padding: 10px 15px 13px;
+    border-top: 1px solid var(--border);
+    min-height: 38px;
+  }
+  .mem-feedback {
+    font-family: 'EB Garamond', serif;
+    font-size: 15px;
+    font-style: italic;
+    color: var(--text-mid);
+    flex: 1;
+  }
+  .mem-feedback.good { color: #4caf82; }
+  .mem-feedback.bad  { color: #d05050; }
+
+  .mem-complete {
+    padding: 20px 15px;
+    text-align: center;
+  }
+  .mem-complete p {
+    font-family: 'EB Garamond', serif;
+    font-size: 17px;
+    color: var(--text-mid);
+    line-height: 1.6;
+  }
+  .mem-complete strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .mem-restart {
+    margin-top: 12px;
+    padding: 7px 16px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--text-mid);
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .mem-restart:hover { border-color: var(--border-s); }
+
+  /* Footer */
+  footer {
+    padding: 0 20px 28px;
+    max-width: 560px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  footer p {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+  .open-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    padding: 8px 14px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--text-mid);
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s;
+    cursor: pointer;
+  }
+  .open-btn:hover { border-color: var(--border-s); color: var(--text); }
+  .open-btn svg { flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <button class="theme-btn" id="themeBtn">Light</button>
+  </div>
+
+  <div class="emblem">
+    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="18" y1="2" x2="18" y2="28" stroke="#4a90d9" stroke-width="2" stroke-linecap="round"/>
+      <line x1="11" y1="22" x2="25" y2="22" stroke="#4a90d9" stroke-width="2" stroke-linecap="round"/>
+      <polygon points="18,28 15.5,33 18,31.5 20.5,33" fill="#4a90d9"/>
+    </svg>
+  </div>
+
+  <h1>It Is Written</h1>
+  <p class="tagline">The sword of the Spirit — Ephesians 6:17</p>
+</header>
+
+<div class="search-wrap">
+  <div class="search-row">
+    <div class="search-field">
+      <input type="text" id="searchInput" placeholder="Search a topic — fear, hope, healing…" autocomplete="off" />
+    </div>
+    <button class="search-btn" id="searchBtn">Search</button>
+  </div>
+</div>
+
+<div class="topics-wrap">
+  <p class="topics-label">Common topics</p>
+  <div class="topics" id="topics"></div>
+</div>
+
+<div class="results-wrap" id="resultsWrap">
+  <div class="empty-state">
+    <p>Your word is a lamp to my feet and a light to my path.</p>
+    <cite>Psalm 119:105</cite>
+  </div>
+</div>
+
+<footer>
+  <p>Verses drawn from multiple translations. Always read in full context of Scripture.</p>
+  <a class="open-btn" href="https://claude.ai/artifact/QCeqCbfvP3itHCygmyTyv6" target="_blank" rel="noopener">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M5 2H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M8 1h4v4M12 1L6.5 6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Open in browser — enables voice
+  </a>
+</footer>
+
+<script>
+const TOPICS = [
+  'Fear','Anxiety','Hope','Forgiveness','Strength','Love',
+  'Faith','Healing','Temptation','Purpose','Peace','Grief',
+  'Courage','Wisdom','Identity','Prayer'
+];
+
+const topicsEl   = document.getElementById('topics');
+const searchInput= document.getElementById('searchInput');
+const searchBtn  = document.getElementById('searchBtn');
+const resultsWrap= document.getElementById('resultsWrap');
+const themeBtn   = document.getElementById('themeBtn');
+
+let currentTheme = 'dark';
+themeBtn.onclick = () => {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  themeBtn.textContent = currentTheme === 'dark' ? 'Light' : 'Dark';
+};
+
+TOPICS.forEach(t => {
+  const tag = document.createElement('button');
+  tag.className = 'topic-tag';
+  tag.textContent = t;
+  tag.onclick = () => { searchInput.value = t; doSearch(t); };
+  topicsEl.appendChild(tag);
+});
+
+searchBtn.onclick = () => { const q = searchInput.value.trim(); if (q) doSearch(q); };
+searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') { const q = searchInput.value.trim(); if (q) doSearch(q); }});
+
+let currentAbort = null;
+let verseStore = {};
+
+async function doSearch(topic) {
+  if (currentAbort) currentAbort.abort();
+  currentAbort = new AbortController();
+  resultsWrap.innerHTML = `<div class="loading">Searching the Word…</div>`;
+  searchBtn.disabled = true;
+
+  try {
+    const sample = await claude.use('sample');
+    if (!sample) { showError('Scripture search is unavailable right now.'); return; }
+
+    const prompt = `You are a careful Bible scholar helping people find relevant scriptures and understand them correctly.
+
+Topic: "${topic}"
+
+Return EXACTLY 5 relevant Bible verses as a JSON array. No markdown, no code fences, only raw JSON.
+
+[
+  {
+    "ref": "Book Chapter:Verse",
+    "verse": "The full verse text, accurate to the translation",
+    "translation": "e.g. NIV",
+    "note": "One concise sentence on why this verse applies to the topic",
+    "audience": "One sentence: who was this originally written to, and in what historical situation?",
+    "caution": "One sentence: any common misreading or over-personalization to avoid — or null if none applies",
+    "application": "One to two sentences: how a believer today can honestly and faithfully apply this truth"
+  }
+]
+
+Be especially careful with verses like Jeremiah 29:11 (written to exiles, not a personal prosperity promise), Romans 8:28 (a comfort for the suffering, not a guarantee life will feel good), and Philippians 4:13 (about contentment in hardship, not unlimited personal achievement). Honest context builds stronger faith. Be precise — these are real verses.`;
+
+    const result = await sample(prompt, { signal: currentAbort.signal, modelTier: 'default' });
+    const raw = result.text.replace(/```json|```/gi,'').trim();
+    const scriptures = JSON.parse(raw);
+    showResults(topic, scriptures);
+  } catch(err) {
+    if (err && err.code === 'aborted') return;
+    console.error(err);
+    showError('Something went wrong. Please try again.');
+  } finally {
+    searchBtn.disabled = false;
+  }
+}
+
+function showError(msg) {
+  resultsWrap.innerHTML = `<div class="error-msg"><p>${esc(msg)}</p><button class="retry-btn" onclick="doSearch(document.getElementById('searchInput').value)">Try again</button></div>`;
+}
+
+function showResults(topic, scriptures) {
+  if (!Array.isArray(scriptures) || scriptures.length === 0) { showError('No verses found. Try a different topic.'); return; }
+  verseStore = {};
+  scriptures.forEach((s, i) => {
+    verseStore[i] = { ref: s.ref||'', verse: s.verse||'', topic, audience: s.audience||'', caution: s.caution||null, application: s.application||'' };
+  });
+
+  const heading = `<p class="results-heading">5 verses on ${esc(topic)}</p>`;
+  const cards = scriptures.map((s, i) => `
+    <div class="verse-card" id="card-${i}">
+      <div class="verse-ref">
+        <span class="verse-ref-text">${esc(s.ref||'')}</span>
+        <span class="verse-translation">${esc(s.translation||'')}</span>
+      </div>
+      <div class="verse-text">${esc(s.verse||'')}</div>
+      ${s.note ? `<div class="verse-note">${esc(s.note)}</div>` : ''}
+      <div class="btn-row">
+        <button class="toggle-btn" id="ctx-btn-${i}" onclick="toggleContext(${i})">Context &amp; insight</button>
+        <button class="toggle-btn" id="pray-btn-${i}" onclick="generatePrayer(${i})">Pray this</button>
+        <button class="toggle-btn" id="mem-btn-${i}" onclick="toggleMemorize(${i})">Memorize</button>
+      </div>
+      <div id="context-${i}" style="display:none;"></div>
+      <div id="prayer-${i}"></div>
+      <div id="memorize-${i}" style="display:none;"></div>
+    </div>`).join('');
+
+  resultsWrap.innerHTML = heading + `<div class="verse-list">${cards}</div>`;
+}
+
+function toggleContext(index) {
+  const div = document.getElementById(`context-${index}`);
+  const btn = document.getElementById(`ctx-btn-${index}`);
+  const data = verseStore[index];
+  if (!div || !data) return;
+
+  if (div.style.display !== 'none') {
+    div.style.display = 'none';
+    btn.classList.remove('open');
+    btn.textContent = 'Context & insight';
+    return;
+  }
+
+  const cautionHtml = data.caution ? `
+    <div class="ctx-section caution">
+      <div class="ctx-label">Common misreading</div>
+      <div class="ctx-text">${esc(data.caution)}</div>
+    </div>` : '';
+
+  div.innerHTML = `
+    <div class="context-block">
+      <div class="ctx-section">
+        <div class="ctx-label">Original audience</div>
+        <div class="ctx-text">${esc(data.audience)}</div>
+      </div>
+      ${cautionHtml}
+      <div class="ctx-section">
+        <div class="ctx-label">Faithful application</div>
+        <div class="ctx-text">${esc(data.application)}</div>
+      </div>
+    </div>`;
+  div.style.display = 'block';
+  btn.classList.add('open');
+  btn.textContent = 'Hide context';
+}
+
+async function generatePrayer(index) {
+  const btn = document.getElementById(`pray-btn-${index}`);
+  const prayerDiv = document.getElementById(`prayer-${index}`);
+  const data = verseStore[index];
+  if (!btn || !prayerDiv || !data) return;
+
+  if (prayerDiv.innerHTML) {
+    prayerDiv.innerHTML = '';
+    btn.classList.remove('open');
+    btn.textContent = 'Pray this';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Writing…';
+  prayerDiv.innerHTML = `<div class="prayer-block"><div class="prayer-loading">Lifting this Word in prayer…</div></div>`;
+
+  try {
+    const sample = await claude.use('sample');
+    if (!sample) { prayerDiv.innerHTML = ''; btn.disabled = false; btn.textContent = 'Pray this'; return; }
+
+    const prompt = `Write a sincere, personal prayer based on this Bible verse.
+
+Verse: ${data.ref} — "${data.verse}"
+Topic: ${data.topic}
+
+4–6 sentences. Address God directly. Weave the language of this verse naturally into the prayer. End with a declaration of trust. Write only the prayer — no title, no label, begin directly with the address to God.`;
+
+    const result = await sample(prompt, { modelTier: 'default' });
+    prayerDiv.innerHTML = `
+      <div class="prayer-block">
+        <div class="prayer-label">A prayer</div>
+        <div class="prayer-text">${esc(result.text.trim())}</div>
+      </div>`;
+    btn.disabled = false;
+    btn.classList.add('open');
+    btn.textContent = 'Hide prayer';
+  } catch(err) {
+    console.error(err);
+    prayerDiv.innerHTML = '';
+    btn.disabled = false;
+    btn.textContent = 'Pray this';
+  }
+}
+
+// ── Memorize ──────────────────────────────────────────────
+const MEM_ROUNDS = [0.25, 0.5, 0.75, 1.0];
+let memState = {};
+
+// Tiny Web Audio ding — no file needed
+function playDing() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1100, ctx.currentTime + 0.08);
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.35);
+  } catch(e) {}
+}
+
+function toggleMemorize(index) {
+  const div = document.getElementById(`memorize-${index}`);
+  const btn = document.getElementById(`mem-btn-${index}`);
+  const data = verseStore[index];
+  if (!div || !data) return;
+
+  if (div.style.display !== 'none') {
+    stopMic(index);
+    div.style.display = 'none';
+    btn.classList.remove('open');
+    btn.textContent = 'Memorize';
+    delete memState[index];
+    return;
+  }
+
+  memState[index] = { round: 0 };
+  renderMemRound(index);
+  div.style.display = 'block';
+  btn.classList.add('open');
+  btn.textContent = 'Close';
+}
+
+function tokenize(verse) {
+  const tokens = [];
+  const re = /(\s*)(\S+)/g;
+  let m;
+  while ((m = re.exec(verse)) !== null) {
+    const raw = m[2];
+    // strip leading/trailing punctuation to get the matchable core
+    const clean = raw.replace(/[.,;:!?"'()\-—]+$/, '').replace(/^['"(—]+/, '');
+    // leading/trailing punctuation pieces for display restoration
+    const leadPunct  = raw.slice(0, raw.length - raw.replace(/^['"(—]+/, '').length);
+    const trailPunct = raw.slice(raw.replace(/[.,;:!?"'()\-—]+$/, '').length);
+    tokens.push({ raw, clean, space: m[1], leadPunct, trailPunct });
+  }
+  return tokens;
+}
+
+// Rebuild display value: preserve original capitalisation and surround with punctuation
+function displayForm(token) {
+  return token.leadPunct + token.clean + token.trailPunct;
+}
+
+function chooseBlankIndices(tokens, fraction) {
+  const isRound4 = fraction >= 1.0;
+  const eligible = tokens
+    .map((t, i) => ({ i, len: t.clean.length }))
+    .filter(t => isRound4 ? true : t.len > 2);
+  const count = Math.max(1, Math.round(eligible.length * fraction));
+  const step = eligible.length / count;
+  const chosen = new Set();
+  for (let k = 0; k < count; k++) {
+    chosen.add(eligible[Math.min(eligible.length - 1, Math.round(k * step + step / 2))].i);
+  }
+  return chosen;
+}
+
+function normalize(str) {
+  return str.toLowerCase().replace(/[.,;:!?"'()\-—]/g, '').trim();
+}
+
+function renderMemRound(index) {
+  const div = document.getElementById(`memorize-${index}`);
+  const data = verseStore[index];
+  const state = memState[index];
+  if (!div || !data || !state) return;
+
+  const fraction = MEM_ROUNDS[state.round];
+  const tokens = tokenize(data.verse);
+  state.tokens = tokens;
+  state.blanks = chooseBlankIndices(tokens, fraction);
+  state.solved = new Set();
+
+  const dots = MEM_ROUNDS.map((_, ri) => {
+    const cls = ri < state.round ? 'mem-round-dot done' : ri === state.round ? 'mem-round-dot active' : 'mem-round-dot';
+    return `<div class="${cls}"></div>`;
+  }).join('');
+
+  let verseHtml = '';
+  const blankList = []; // ordered list of token indices that are blanked
+  tokens.forEach((t, i) => {
+    const spaceHtml = t.space ? t.space.replace(/ /g, '&nbsp;') : '';
+    if (state.blanks.has(i)) {
+      blankList.push(i);
+      const w = Math.max(40, (t.clean.length + t.leadPunct.length + t.trailPunct.length) * 11);
+      const disp = displayForm(t).replace(/"/g, '&quot;');
+      verseHtml += spaceHtml + `<input class="mem-blank" id="mb-${index}-${i}" data-answer="${normalize(t.clean).replace(/"/g,'&quot;')}" data-display="${disp}" data-tidx="${i}" style="width:${w}px" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />`;
+    } else {
+      verseHtml += spaceHtml + t.raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+  });
+  state.blankList = blankList;
+
+  const roundLabel = state.round < 3
+    ? `Round ${state.round + 1} of 4 — type each missing word`
+    : `Final round — write the whole verse from memory`;
+
+  const micSupported = !!( window.SpeechRecognition || window.webkitSpeechRecognition );
+  const micBtnHtml = micSupported
+    ? `<button class="mem-mic-btn" id="mem-mic-${index}" onclick="toggleMic(${index})" title="Speak the words"><span class="mic-dot"></span>Speak</button>`
+    : '';
+
+  div.innerHTML = `
+    <div class="mem-block">
+      <div class="mem-header">
+        <span class="mem-header-label">${roundLabel}</span>
+        <div class="mem-header-right">
+          ${micBtnHtml}
+          <div class="mem-rounds">${dots}</div>
+        </div>
+      </div>
+      <div class="mem-verse">${verseHtml}</div>
+      <div class="mem-footer">
+        <span class="mem-feedback" id="mem-fb-${index}"></span>
+      </div>
+    </div>`;
+
+  // Wire up real-time listeners
+  div.querySelectorAll('.mem-blank').forEach(inp => {
+    inp.addEventListener('input', () => handleBlankInput(inp, index));
+  });
+
+  // Focus first blank
+  const first = div.querySelector('.mem-blank');
+  if (first) setTimeout(() => first.focus(), 80);
+}
+
+function handleBlankInput(inp, index) {
+  const state = memState[index];
+  if (!state) return;
+  if (inp.classList.contains('correct')) return; // already solved, ignore
+
+  const answer = inp.dataset.answer;
+  const given = normalize(inp.value);
+
+  if (given === answer) {
+    // Correct! Restore original capitalisation and punctuation
+    inp.value = inp.dataset.display;
+    inp.classList.add('correct');
+    inp.classList.remove('wrong');
+    inp.readOnly = true;
+    playDing();
+
+    const tidx = parseInt(inp.dataset.tidx);
+    state.solved.add(tidx);
+
+    // Move focus to next unsolved blank
+    const nextTidx = state.blankList.find(ti => !state.solved.has(ti) && ti > tidx);
+    if (nextTidx !== undefined) {
+      const next = document.getElementById(`mb-${index}-${nextTidx}`);
+      if (next) setTimeout(() => next.focus(), 40);
+    }
+
+    // Check if all solved
+    if (state.solved.size === state.blanks.size) {
+      roundComplete(index);
+    }
+  } else {
+    inp.classList.remove('correct', 'wrong');
+  }
+}
+
+function roundComplete(index) {
+  const state = memState[index];
+  const fb = document.getElementById(`mem-fb-${index}`);
+  state.round++;
+
+  if (state.round >= MEM_ROUNDS.length) {
+    const data = verseStore[index];
+    const div = document.getElementById(`memorize-${index}`);
+    setTimeout(() => {
+      div.querySelector('.mem-block').innerHTML = `
+        <div class="mem-complete">
+          <p>You've committed <strong>${esc(data.ref)}</strong> to memory.</p>
+          <p style="margin-top:8px; font-size:15px;">"${esc(data.verse)}"</p>
+          <button class="mem-restart" onclick="restartMemorize(${index})">Start over</button>
+        </div>`;
+    }, 400);
+  } else {
+    if (fb) { fb.textContent = 'Well done!'; fb.className = 'mem-feedback good'; }
+    setTimeout(() => renderMemRound(index), 700);
+  }
+}
+
+function restartMemorize(index) {
+  stopMic(index);
+  memState[index] = { round: 0 };
+  renderMemRound(index);
+}
+
+// ── Speech recognition ────────────────────────────────────
+let activeRecognition = null;
+
+function toggleMic(index) {
+  const state = memState[index];
+  if (!state) return;
+  state.micOn ? stopMic(index) : startMic(index);
+}
+
+function stopMic(index) {
+  if (activeRecognition) {
+    activeRecognition._stopped = true;
+    try { activeRecognition.stop(); } catch(e) {}
+    activeRecognition = null;
+  }
+  const state = memState[index];
+  if (state) state.micOn = false;
+
+  const btn = document.getElementById(`mem-mic-${index}`);
+  if (btn) { btn.classList.remove('mic-on'); btn.innerHTML = '<span class="mic-dot"></span>Speak'; }
+
+  const div = document.getElementById(`memorize-${index}`);
+  if (div) div.querySelectorAll('.mem-blank').forEach(b => b.classList.remove('listening'));
+}
+
+function focusListeningBlank(index) {
+  const state = memState[index];
+  const div = document.getElementById(`memorize-${index}`);
+  if (!state || !div) return;
+  div.querySelectorAll('.mem-blank').forEach(b => b.classList.remove('listening'));
+  const nextTidx = state.blankList.find(ti => !state.solved.has(ti));
+  if (nextTidx === undefined) return null;
+  const inp = document.getElementById(`mb-${index}-${nextTidx}`);
+  if (inp) { inp.classList.add('listening'); inp.focus(); }
+  return nextTidx;
+}
+
+function startMic(index) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return;
+
+  if (activeRecognition) {
+    activeRecognition._stopped = true;
+    try { activeRecognition.stop(); } catch(e) {}
+    activeRecognition = null;
+  }
+
+  const state = memState[index];
+  if (!state) return;
+  state.micOn = true;
+
+  const btn = document.getElementById(`mem-mic-${index}`);
+  if (btn) { btn.classList.add('mic-on'); btn.innerHTML = '<span class="mic-dot"></span>Listening…'; }
+
+  focusListeningBlank(index);
+
+  const recog = new SpeechRecognition();
+  recog._stopped = false;
+  activeRecognition = recog;
+
+  recog.lang = 'en-US';
+  recog.continuous = true;       // one session stays open the whole round
+  recog.interimResults = false;
+  recog.maxAlternatives = 6;
+
+  recog.onresult = (event) => {
+    if (!state.micOn || recog._stopped) return;
+
+    // Find current target blank
+    const nextTidx = state.blankList.find(ti => !state.solved.has(ti));
+    if (nextTidx === undefined) { stopMic(index); return; }
+
+    const inp = document.getElementById(`mb-${index}-${nextTidx}`);
+    if (!inp || inp.classList.contains('correct')) return;
+
+    // Check all alternatives from the latest result
+    const result = event.results[event.results.length - 1];
+    for (let a = 0; a < result.length; a++) {
+      const spoken = normalize(result[a].transcript);
+      // Also try just the last word spoken in case they said extra words
+      const spokenLast = spoken.split(/\s+/).pop();
+
+      if (spoken === normalize(inp.dataset.answer) || spokenLast === normalize(inp.dataset.answer)) {
+        inp.value = spokenLast === normalize(inp.dataset.answer) ? spokenLast : spoken;
+        inp.dispatchEvent(new Event('input'));
+        // After a short pause highlight the next blank
+        setTimeout(() => { if (state.micOn) focusListeningBlank(index); }, 500);
+        break;
+      }
+    }
+  };
+
+  recog.onerror = (e) => {
+    if (recog._stopped) return;
+    if (e.error === 'no-speech') return; // silent — just keep listening
+    if (e.error === 'aborted') return;
+    // Real errors
+    stopMic(index);
+    const fb = document.getElementById(`mem-fb-${index}`);
+    if (fb) {
+      fb.textContent = e.error === 'not-allowed'
+        ? 'Microphone permission denied — check your browser settings.'
+        : 'Microphone error: ' + e.error;
+      fb.className = 'mem-feedback bad';
+    }
+  };
+
+  recog.onend = () => {
+    // Continuous mode can still end if the browser cuts it — restart if still meant to be on
+    if (!recog._stopped && state.micOn) {
+      try { recog.start(); } catch(e) {}
+    }
+  };
+
+  try {
+    recog.start();
+  } catch(e) {
+    stopMic(index);
+    const fb = document.getElementById(`mem-fb-${index}`);
+    if (fb) { fb.textContent = 'Could not start microphone.'; fb.className = 'mem-feedback bad'; }
+  }
+}
+// ── End memorize ──────────────────────────────────────────
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
