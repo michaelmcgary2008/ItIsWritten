@@ -668,6 +668,7 @@ async function askClaude(payload, signal) {
 
 let currentAbort = null;
 let verseStore = {};
+let contextState = null;   // 'loading' | 'ready' | 'error'
 
 async function doSearch(topic) {
   if (currentAbort) currentAbort.abort();
@@ -680,6 +681,7 @@ async function doSearch(topic) {
     const raw = result.text.replace(/```json|```/gi,'').trim();
     const scriptures = JSON.parse(raw);
     showResults(topic, scriptures);
+    loadContext(currentAbort.signal);
   } catch(err) {
     if (err && err.name === 'AbortError') return;
     console.error(err);
@@ -694,8 +696,8 @@ function showError(msg) {
 }
 
 function showResults(topic, scriptures) {
-  if (!Array.isArray(scriptures) || scriptures.length === 0) { showError('No verses found. Try a different topic.'); return; }
   verseStore = {};
+  if (!Array.isArray(scriptures) || scriptures.length === 0) { showError('No verses found. Try a different topic.'); return; }
   scriptures.forEach((s, i) => {
     verseStore[i] = { ref: s.ref||'', verse: s.verse||'', topic, audience: s.audience||'', caution: s.caution||null, application: s.application||'' };
   });
@@ -722,6 +724,63 @@ function showResults(topic, scriptures) {
   resultsWrap.innerHTML = heading + `<div class="verse-list">${cards}</div>`;
 }
 
+async function loadContext(signal) {
+  const indexes = Object.keys(verseStore).map(Number).sort((a, b) => a - b);
+  if (!indexes.length) return;
+  contextState = 'loading';
+  try {
+    const verses = indexes.map(i => ({ ref: verseStore[i].ref, verse: verseStore[i].verse }));
+    const result = await askClaude({ action: 'context', topic: verseStore[indexes[0]].topic, verses }, signal);
+    const raw = result.text.replace(/```json|```/gi,'').trim();
+    const items = JSON.parse(raw);
+    if (!Array.isArray(items) || items.length === 0) throw new Error('Unexpected context response');
+    indexes.forEach((i, n) => {
+      const c = items[n] || {};
+      verseStore[i].audience = c.audience || '';
+      verseStore[i].caution = c.caution || null;
+      verseStore[i].application = c.application || '';
+    });
+    contextState = 'ready';
+  } catch (err) {
+    if (err && err.name === 'AbortError') return;
+    console.error(err);
+    contextState = 'error';
+  }
+  indexes.forEach(i => {
+    const div = document.getElementById(`context-${i}`);
+    if (div && div.style.display !== 'none') renderContext(i);
+  });
+}
+
+function renderContext(index) {
+  const div = document.getElementById(`context-${index}`);
+  const data = verseStore[index];
+  if (!div || !data) return;
+
+  if (contextState === 'ready') {
+    const cautionHtml = data.caution ? `
+    <div class="ctx-section caution">
+      <div class="ctx-label">Common misreading</div>
+      <div class="ctx-text">${esc(data.caution)}</div>
+    </div>` : '';
+
+    div.innerHTML = `
+    <div class="context-block">
+      <div class="ctx-section">
+        <div class="ctx-label">Original audience</div>
+        <div class="ctx-text">${esc(data.audience)}</div>
+      </div>
+      ${cautionHtml}
+      <div class="ctx-section">
+        <div class="ctx-label">Faithful application</div>
+        <div class="ctx-text">${esc(data.application)}</div>
+      </div>
+    </div>`;
+  } else {
+    div.innerHTML = `<div class="context-block"><div class="ctx-section"><div class="ctx-text">${contextState === 'error' ? 'Context unavailable right now.' : 'Gathering context…'}</div></div></div>`;
+  }
+}
+
 function toggleContext(index) {
   const div = document.getElementById(`context-${index}`);
   const btn = document.getElementById(`ctx-btn-${index}`);
@@ -735,24 +794,8 @@ function toggleContext(index) {
     return;
   }
 
-  const cautionHtml = data.caution ? `
-    <div class="ctx-section caution">
-      <div class="ctx-label">Common misreading</div>
-      <div class="ctx-text">${esc(data.caution)}</div>
-    </div>` : '';
-
-  div.innerHTML = `
-    <div class="context-block">
-      <div class="ctx-section">
-        <div class="ctx-label">Original audience</div>
-        <div class="ctx-text">${esc(data.audience)}</div>
-      </div>
-      ${cautionHtml}
-      <div class="ctx-section">
-        <div class="ctx-label">Faithful application</div>
-        <div class="ctx-text">${esc(data.application)}</div>
-      </div>
-    </div>`;
+  if (contextState === 'error') loadContext(currentAbort ? currentAbort.signal : undefined);
+  renderContext(index);
   div.style.display = 'block';
   btn.classList.add('open');
   btn.textContent = 'Hide context';
