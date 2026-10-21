@@ -1038,7 +1038,9 @@ function renderMemRound(index) {
     ? `Round ${state.round + 1} of 4 — type each missing word`
     : `Final round — write the whole verse from memory`;
 
-  const micSupported = !!( window.SpeechRecognition || window.webkitSpeechRecognition );
+  // Voice input is disabled for now: the Speak button never renders. Restore the
+  // SpeechRecognition check here to bring it back.
+  const micSupported = false;
   const micBtnHtml = micSupported
     ? `<button class="mem-mic-btn" id="mem-mic-${index}" onclick="toggleMic(${index})" title="Speak the words"><span class="mic-dot"></span>Speak</button>`
     : '';
