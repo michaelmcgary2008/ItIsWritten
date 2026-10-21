@@ -598,7 +598,7 @@
 <div class="search-wrap">
   <div class="search-row">
     <div class="search-field">
-      <input type="text" id="searchInput" placeholder="Search a topic — fear, hope, healing…" autocomplete="off" />
+      <input type="text" id="searchInput" placeholder="Search a topic — fear, hope, healing…" autocomplete="off" maxlength="80" />
     </div>
     <button class="search-btn" id="searchBtn">Search</button>
   </div>
@@ -618,13 +618,6 @@
 
 <footer>
   <p>Verses drawn from multiple translations. Always read in full context of Scripture.</p>
-  <a class="open-btn" href="https://claude.ai/artifact/QCeqCbfvP3itHCygmyTyv6" target="_blank" rel="noopener">
-    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M5 2H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-      <path d="M8 1h4v4M12 1L6.5 6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    Open in browser — enables voice
-  </a>
 </footer>
 
 <script>
@@ -658,6 +651,21 @@ TOPICS.forEach(t => {
 searchBtn.onclick = () => { const q = searchInput.value.trim(); if (q) doSearch(q); };
 searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') { const q = searchInput.value.trim(); if (q) doSearch(q); }});
 
+async function askClaude(payload, signal) {
+  const res = await fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    signal
+  });
+  let data = null;
+  try { data = await res.json(); } catch (e) { if (e && e.name === 'AbortError') throw e; }
+  if (!res.ok || !data || typeof data.text !== 'string') {
+    throw new Error((data && data.error) || `Request failed (${res.status})`);
+  }
+  return data;
+}
+
 let currentAbort = null;
 let verseStore = {};
 
@@ -668,35 +676,12 @@ async function doSearch(topic) {
   searchBtn.disabled = true;
 
   try {
-    const sample = await claude.use('sample');
-    if (!sample) { showError('Scripture search is unavailable right now.'); return; }
-
-    const prompt = `You are a careful Bible scholar helping people find relevant scriptures and understand them correctly.
-
-Topic: "${topic}"
-
-Return EXACTLY 5 relevant Bible verses as a JSON array. No markdown, no code fences, only raw JSON.
-
-[
-  {
-    "ref": "Book Chapter:Verse",
-    "verse": "The full verse text, accurate to the translation",
-    "translation": "e.g. NIV",
-    "note": "One concise sentence on why this verse applies to the topic",
-    "audience": "One sentence: who was this originally written to, and in what historical situation?",
-    "caution": "One sentence: any common misreading or over-personalization to avoid — or null if none applies",
-    "application": "One to two sentences: how a believer today can honestly and faithfully apply this truth"
-  }
-]
-
-Be especially careful with verses like Jeremiah 29:11 (written to exiles, not a personal prosperity promise), Romans 8:28 (a comfort for the suffering, not a guarantee life will feel good), and Philippians 4:13 (about contentment in hardship, not unlimited personal achievement). Honest context builds stronger faith. Be precise — these are real verses.`;
-
-    const result = await sample(prompt, { signal: currentAbort.signal, modelTier: 'default' });
+    const result = await askClaude({ action: 'search', topic }, currentAbort.signal);
     const raw = result.text.replace(/```json|```/gi,'').trim();
     const scriptures = JSON.parse(raw);
     showResults(topic, scriptures);
   } catch(err) {
-    if (err && err.code === 'aborted') return;
+    if (err && err.name === 'AbortError') return;
     console.error(err);
     showError('Something went wrong. Please try again.');
   } finally {
@@ -791,17 +776,7 @@ async function generatePrayer(index) {
   prayerDiv.innerHTML = `<div class="prayer-block"><div class="prayer-loading">Lifting this Word in prayer…</div></div>`;
 
   try {
-    const sample = await claude.use('sample');
-    if (!sample) { prayerDiv.innerHTML = ''; btn.disabled = false; btn.textContent = 'Pray this'; return; }
-
-    const prompt = `Write a sincere, personal prayer based on this Bible verse.
-
-Verse: ${data.ref} — "${data.verse}"
-Topic: ${data.topic}
-
-4–6 sentences. Address God directly. Weave the language of this verse naturally into the prayer. End with a declaration of trust. Write only the prayer — no title, no label, begin directly with the address to God.`;
-
-    const result = await sample(prompt, { modelTier: 'default' });
+    const result = await askClaude({ action: 'prayer', ref: data.ref, verse: data.verse, topic: data.topic });
     prayerDiv.innerHTML = `
       <div class="prayer-block">
         <div class="prayer-label">A prayer</div>
