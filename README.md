@@ -55,6 +55,10 @@ npx vercel env add ANTHROPIC_API_KEY production --sensitive --scope waters-churc
 
 (same for `preview`), then redeploy.
 
+Deployment Protection (Vercel Authentication) is set to "Only Preview Deployments" in
+the project settings, so the production address is public and preview deployments
+require a Vercel login (or a share link from the dashboard).
+
 ## Secrets
 
 The API key must never be committed or put in client code. It is read only from the
