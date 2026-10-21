@@ -253,6 +253,21 @@
     cursor: pointer;
   }
   .retry-btn:hover { border-color: var(--border-s); }
+  .more-wrap { text-align: center; margin-top: 18px; }
+  .more-btn {
+    display: inline-block;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 9px 18px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--text-mid);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .more-btn:hover { border-color: var(--border-s); color: var(--text); }
+  .more-btn:disabled { cursor: default; color: var(--text-dim); border-color: var(--border); }
 
   /* ── Verse cards ── */
   .verse-list { display: flex; flex-direction: column; gap: 12px; }
@@ -395,6 +410,12 @@
     font-style: italic;
     color: var(--text-dim);
   }
+  @keyframes prayer-glow {
+    0%   { border-color: var(--blue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 30%, transparent); }
+    100% { border-color: var(--border); box-shadow: 0 0 0 0 color-mix(in srgb, var(--blue) 0%, transparent); }
+  }
+  .prayer-block.is-new { animation: prayer-glow 2s ease-out 0.3s both; }
+  @media (prefers-reduced-motion: reduce) { .prayer-block.is-new { animation: none; } }
 
   /* ── Memorize block ── */
   .mem-block {
@@ -626,6 +647,7 @@ const TOPICS = [
   'Faith','Healing','Temptation','Purpose','Peace','Grief',
   'Courage','Wisdom','Identity','Prayer'
 ];
+const MAX_VERSES = 25;   // most verses shown for one search ("More verses" stops here)
 
 const topicsEl   = document.getElementById('topics');
 const searchInput= document.getElementById('searchInput');
@@ -667,8 +689,8 @@ async function askClaude(payload, signal) {
 }
 
 let currentAbort = null;
-let verseStore = {};
-let contextState = null;   // 'loading' | 'ready' | 'error'
+let verseStore = {};   // index -> verse; each has contextStatus: 'loading' | 'ready' | 'error'
+let currentTopic = '';
 
 async function doSearch(topic) {
   if (currentAbort) currentAbort.abort();
@@ -680,8 +702,8 @@ async function doSearch(topic) {
     const result = await askClaude({ action: 'search', topic }, currentAbort.signal);
     const raw = result.text.replace(/```json|```/gi,'').trim();
     const scriptures = JSON.parse(raw);
-    showResults(topic, scriptures);
-    loadContext(currentAbort.signal);
+    const indexes = showResults(topic, scriptures);
+    if (indexes) loadContext(indexes, currentAbort.signal);
   } catch(err) {
     if (err && err.name === 'AbortError') return;
     console.error(err);
@@ -695,15 +717,8 @@ function showError(msg) {
   resultsWrap.innerHTML = `<div class="error-msg"><p>${esc(msg)}</p><button class="retry-btn" onclick="doSearch(document.getElementById('searchInput').value)">Try again</button></div>`;
 }
 
-function showResults(topic, scriptures) {
-  verseStore = {};
-  if (!Array.isArray(scriptures) || scriptures.length === 0) { showError('No verses found. Try a different topic.'); return; }
-  scriptures.forEach((s, i) => {
-    verseStore[i] = { ref: s.ref||'', verse: s.verse||'', topic, audience: s.audience||'', caution: s.caution||null, application: s.application||'' };
-  });
-
-  const heading = `<p class="results-heading">5 verses on ${esc(topic)}</p>`;
-  const cards = scriptures.map((s, i) => `
+function cardHtml(s, i) {
+  return `
     <div class="verse-card" id="card-${i}">
       <div class="verse-ref">
         <span class="verse-ref-text">${esc(s.ref||'')}</span>
@@ -719,18 +734,81 @@ function showResults(topic, scriptures) {
       <div id="context-${i}" style="display:none;"></div>
       <div id="prayer-${i}"></div>
       <div id="memorize-${i}" style="display:none;"></div>
-    </div>`).join('');
-
-  resultsWrap.innerHTML = heading + `<div class="verse-list">${cards}</div>`;
+    </div>`;
 }
 
-async function loadContext(signal) {
-  const indexes = Object.keys(verseStore).map(Number).sort((a, b) => a - b);
+// Appends scriptures to verseStore at the next free indexes; returns those indexes.
+function addVerses(scriptures) {
+  const start = Object.keys(verseStore).length;
+  return scriptures.map((s, n) => {
+    const i = start + n;
+    verseStore[i] = { ref: s.ref||'', verse: s.verse||'', topic: currentTopic, audience: s.audience||'', caution: s.caution||null, application: s.application||'', contextStatus: 'loading' };
+    return i;
+  });
+}
+
+function updateHeading() {
+  const el = document.querySelector('.results-heading');
+  if (el) el.innerHTML = `${Object.keys(verseStore).length} verses on ${esc(currentTopic)}`;
+}
+
+function moreButtonHtml() {
+  if (Object.keys(verseStore).length >= MAX_VERSES) return '';
+  return `<div class="more-wrap"><button class="more-btn" id="moreBtn" onclick="loadMore()">More verses</button></div>`;
+}
+
+function showResults(topic, scriptures) {
+  verseStore = {};
+  if (!Array.isArray(scriptures) || scriptures.length === 0) { showError('No verses found. Try a different topic.'); return; }
+  currentTopic = topic;
+  const indexes = addVerses(scriptures);
+
+  const heading = `<p class="results-heading">${Object.keys(verseStore).length} verses on ${esc(topic)}</p>`;
+  const cards = scriptures.map((s, i) => cardHtml(s, i)).join('');
+
+  resultsWrap.innerHTML = heading + `<div class="verse-list" id="verseList">${cards}</div>` + moreButtonHtml();
+  return indexes;
+}
+
+async function loadMore() {
+  const btn = document.getElementById('moreBtn');
+  if (!btn || !currentTopic) return;
+  btn.disabled = true;
+  btn.textContent = 'Searching the Word…';
+  const signal = currentAbort ? currentAbort.signal : undefined;
+  try {
+    const exclude = Object.values(verseStore).map(v => v.ref).filter(Boolean).slice(-30);
+    const result = await askClaude({ action: 'search', topic: currentTopic, exclude }, signal);
+    const raw = result.text.replace(/```json|```/gi,'').trim();
+    const scriptures = JSON.parse(raw);
+    const seen = new Set(Object.values(verseStore).map(v => String(v.ref).toLowerCase()));
+    const fresh = (Array.isArray(scriptures) ? scriptures : []).filter(s => s && s.ref && !seen.has(String(s.ref).toLowerCase()))
+      .slice(0, Math.max(0, Math.min(5, MAX_VERSES - Object.keys(verseStore).length)));
+    if (!fresh.length) { btn.textContent = 'No more verses found.'; return; }
+    const indexes = addVerses(fresh);
+    document.getElementById('verseList').insertAdjacentHTML('beforeend', indexes.map((i, n) => cardHtml(fresh[n], i)).join(''));
+    updateHeading();
+    if (Object.keys(verseStore).length >= MAX_VERSES) {
+      btn.parentElement.remove();
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'More verses';
+    }
+    loadContext(indexes, signal);
+  } catch (err) {
+    if (err && err.name === 'AbortError') return;
+    console.error(err);
+    btn.disabled = false;
+    btn.textContent = 'Couldn’t load more. Try again';
+  }
+}
+
+async function loadContext(indexes, signal) {
   if (!indexes.length) return;
-  contextState = 'loading';
+  indexes.forEach(i => { verseStore[i].contextStatus = 'loading'; });
   try {
     const verses = indexes.map(i => ({ ref: verseStore[i].ref, verse: verseStore[i].verse }));
-    const result = await askClaude({ action: 'context', topic: verseStore[indexes[0]].topic, verses }, signal);
+    const result = await askClaude({ action: 'context', topic: currentTopic, verses }, signal);
     const raw = result.text.replace(/```json|```/gi,'').trim();
     const items = JSON.parse(raw);
     if (!Array.isArray(items) || items.length === 0) throw new Error('Unexpected context response');
@@ -739,12 +817,12 @@ async function loadContext(signal) {
       verseStore[i].audience = c.audience || '';
       verseStore[i].caution = c.caution || null;
       verseStore[i].application = c.application || '';
+      verseStore[i].contextStatus = 'ready';
     });
-    contextState = 'ready';
   } catch (err) {
     if (err && err.name === 'AbortError') return;
     console.error(err);
-    contextState = 'error';
+    indexes.forEach(i => { verseStore[i].contextStatus = 'error'; });
   }
   indexes.forEach(i => {
     const div = document.getElementById(`context-${i}`);
@@ -757,7 +835,7 @@ function renderContext(index) {
   const data = verseStore[index];
   if (!div || !data) return;
 
-  if (contextState === 'ready') {
+  if (data.contextStatus === 'ready') {
     const cautionHtml = data.caution ? `
     <div class="ctx-section caution">
       <div class="ctx-label">Common misreading</div>
@@ -777,7 +855,7 @@ function renderContext(index) {
       </div>
     </div>`;
   } else {
-    div.innerHTML = `<div class="context-block"><div class="ctx-section"><div class="ctx-text">${contextState === 'error' ? 'Context unavailable right now.' : 'Gathering context…'}</div></div></div>`;
+    div.innerHTML = `<div class="context-block"><div class="ctx-section"><div class="ctx-text">${data.contextStatus === 'error' ? 'Context unavailable right now.' : 'Gathering context…'}</div></div></div>`;
   }
 }
 
@@ -794,7 +872,7 @@ function toggleContext(index) {
     return;
   }
 
-  if (contextState === 'error') loadContext(currentAbort ? currentAbort.signal : undefined);
+  if (data.contextStatus === 'error') loadContext([index], currentAbort ? currentAbort.signal : undefined);
   renderContext(index);
   div.style.display = 'block';
   btn.classList.add('open');
@@ -821,13 +899,18 @@ async function generatePrayer(index) {
   try {
     const result = await askClaude({ action: 'prayer', ref: data.ref, verse: data.verse, topic: data.topic });
     prayerDiv.innerHTML = `
-      <div class="prayer-block">
+      <div class="prayer-block is-new">
         <div class="prayer-label">A prayer</div>
         <div class="prayer-text">${esc(result.text.trim())}</div>
       </div>`;
     btn.disabled = false;
     btn.classList.add('open');
     btn.textContent = 'Hide prayer';
+    const block = prayerDiv.querySelector('.prayer-block');
+    if (block) {
+      block.addEventListener('animationend', () => block.classList.remove('is-new'), { once: true });
+      block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   } catch(err) {
     console.error(err);
     prayerDiv.innerHTML = '';

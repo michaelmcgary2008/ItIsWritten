@@ -11,7 +11,9 @@ with optional voice input.
   search, context, and prayer).
 - `api/claude.js` — the serverless proxy (Vercel Node.js function). It holds the
   Anthropic API key and builds the prompts server-side. It only accepts
-  `{"action":"search","topic"}` (topic → the five cards),
+  `{"action":"search","topic"}` (topic → the five cards; it also accepts an optional
+  `exclude` list of up to 30 references already shown, which the "More verses" button
+  sends to get five different verses, so one search shows at most 25 verses),
   `{"action":"context","topic","verses"}` (topic + the five verses → audience, caution
   and application, requested by the page in the background after the cards render) or
   `{"action":"prayer","ref","verse","topic"}`, with length caps (topic 80, ref 40,
