@@ -35,7 +35,8 @@ Open http://localhost:3000. `PORT=3001 npm run dev` picks another port.
 ## Deploy to Vercel
 
 The app runs as the Vercel project `it-is-written` in the Waters Church team, at
-https://it-is-written-waters-church.vercel.app. The repo lives on self-hosted Gitea, which Vercel's
+https://itiswritten.vercel.app (the project's generated alias
+it-is-written-waters-church.vercel.app also works). The repo lives on self-hosted Gitea, which Vercel's
 Git integration does not support, so every deploy is done from a local checkout with
 the Vercel CLI (`npx vercel`, signed in to the team):
 
