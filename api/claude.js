@@ -37,11 +37,13 @@ Topic: "${topic}"${seen}
 
 Return EXACTLY 5 relevant Bible verses as a JSON array. No markdown, no code fences, only raw JSON.
 
+Quote every verse word for word from the English Standard Version (ESV).
+
 [
   {
     "ref": "Book Chapter:Verse",
     "verse": "The full verse text, accurate to the translation",
-    "translation": "e.g. NIV",
+    "translation": "ESV",
     "note": "One concise sentence on why this verse applies to the topic"
   }
 ]
