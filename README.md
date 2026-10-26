@@ -4,6 +4,8 @@ A scripture search web app. Search a topic and get five relevant Bible verses wi
 context and insight, a model prayer for each verse, and a four-round memorization tool
 with optional voice input.
 
+Not a developer? To edit the site and publish a change, see [PUBLISHING.md](PUBLISHING.md).
+
 ## Files
 
 - `index.html` — the complete front end: one self-contained file with inline CSS and
@@ -47,10 +49,17 @@ Open http://localhost:3000. `PORT=3001 npm run dev` picks another port.
 
 ## Deploy to Vercel
 
+Production now deploys automatically. Vercel's Git integration does not support the
+self-hosted Gitea repo directly, so Gitea push-mirrors every commit on `main` to a
+private GitHub relay repo, `github.com/michaelmcgary2008/ItIsWritten`, and Vercel's
+GitHub integration deploys production from it. Nobody should push to the GitHub repo
+directly, because Gitea overwrites it.
+
 The app runs as the Vercel project `it-is-written` in the Waters Church team, at
-https://it-is-written-waters-church.vercel.app. The repo lives on self-hosted Gitea, which Vercel's
-Git integration does not support, so every deploy is done from a local checkout with
-the Vercel CLI (`npx vercel`, signed in to the team):
+https://it-is-written-waters-church.vercel.app.
+
+**Manual fallback.** If the automatic deploy is unavailable, deploy from a local
+checkout with the Vercel CLI (`npx vercel`, signed in to the team):
 
 ```sh
 npx vercel link --yes --project it-is-written --scope waters-church   # once per checkout
