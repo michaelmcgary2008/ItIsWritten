@@ -51,9 +51,12 @@ Open http://localhost:3000. `PORT=3001 npm run dev` picks another port.
 
 Production now deploys automatically. Vercel's Git integration does not support the
 self-hosted Gitea repo directly, so Gitea push-mirrors every commit on `main` to a
-private GitHub relay repo, `github.com/michaelmcgary2008/ItIsWritten`, and Vercel's
-GitHub integration deploys production from it. Nobody should push to the GitHub repo
-directly, because Gitea overwrites it.
+GitHub relay repo, `github.com/michaelmcgary2008/ItIsWritten`, and Vercel's GitHub
+integration deploys production from it. The relay is public on purpose: Vercel blocks
+deployments on private repos when the commit author is not a Vercel team member, and
+commits made on Gitea never are. The source is public on Gitea anyway, and the repo
+holds no secrets. Nobody should push to the GitHub repo directly, because Gitea
+overwrites it.
 
 The app runs as the Vercel project `it-is-written` in the Waters Church team, at
 https://it-is-written-waters-church.vercel.app.
