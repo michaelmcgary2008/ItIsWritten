@@ -59,7 +59,7 @@ holds no secrets. Nobody should push to the GitHub repo directly, because Gitea
 overwrites it.
 
 The app runs as the Vercel project `it-is-written` in the Waters Church team, at
-https://it-is-written-waters-church.vercel.app.
+https://itiswritten.io.
 
 **Manual fallback.** If the automatic deploy is unavailable, deploy from a local
 checkout with the Vercel CLI (`npx vercel`, signed in to the team):

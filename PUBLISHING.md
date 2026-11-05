@@ -7,7 +7,7 @@ You do not need to be a developer. If a step confuses you, stop and ask Michael.
 
 The site's files live in a **Gitea** repository (a shared folder that remembers every
 change) at https://repo.watersmedia.org/Waters-Church/ItIsWritten. **Vercel** is the
-service that runs the live site at https://it-is-written-waters-church.vercel.app.
+service that runs the live site at https://itiswritten.io.
 **GitHub** is only a relay: Gitea copies every change to it automatically and Vercel
 picks it up from there. You never need to open GitHub, and you must never change
 anything on it, because Gitea overwrites it.
@@ -60,7 +60,7 @@ git push origin main
 2. Vercel notices it, builds the site and publishes it. Allow 1 to 3 minutes.
 
 So a change usually shows up within a few minutes. To confirm, open
-https://it-is-written-waters-church.vercel.app and reload. If you still see the old
+https://itiswritten.io and reload. If you still see the old
 version, do a hard refresh (Mac: Cmd+Shift+R, Windows: Ctrl+Shift+R).
 
 Only `main` goes live. A commit to any other branch makes a private test copy that needs
